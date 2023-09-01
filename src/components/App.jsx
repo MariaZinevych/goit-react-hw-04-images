@@ -1,73 +1,64 @@
 import { GlobalStyle } from 'GlobalStyles';
 import { SearchBar } from './Searchbar/searchBar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from './Button/button';
 import { FetchQuery } from 'API';
 import { Loader } from './Loader/Loader';
 
-export class App extends Component {
-  state = {
-    query: '',
-    image: [],
-    page: 1,
-    isloading: false,
-    totalPages: 0,
+export const App = () => {
+  const [query, setQuery] = useState('');
+  const [image, setImage] = useState([]);
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [totalPage, setTotalPage] = useState(0);
+
+  const changeQuery = newQuery => {
+    setQuery(`${Date.now()}/${newQuery}`);
+    setImage([]);
+    setPage(1);
+    setTotalPage(0);
   };
 
-  changeQuery = newQuery => {
-    this.setState({
-      query: `${Date.now()}/${newQuery}`,
-      image: [],
-      page: 1,
-      totalPages: 0,
-    });
+  const handleLoadMore = () => {
+    setPage(prevState => prevState + 1);
   };
 
-  async componentDidUpdate(prevProps, prevState) {
-    if (
-      prevState.query !== this.state.query ||
-      prevState.page !== this.state.page
-    ) {
-      this.setState({ isloading: true });
-      const indexOfSlash = this.state.query.indexOf('/');
-      const queryAfterSlash = this.state.query.slice(indexOfSlash + 1);
-      const pixabay = await FetchQuery(queryAfterSlash, this.state.page);
+  useEffect(() => {
+    if (query === '') return;
 
-      this.setState(prevState => ({
-        image: [...prevState.image, ...pixabay.hits],
-        isloading: false,
-        totalPages: Math.ceil(pixabay.totalHits / 12),
-      }));
+    const indexOfSlash = query.indexOf('/');
+    const queryAfterSlash = query.slice(indexOfSlash + 1);
 
-      if (pixabay.hits.length === 0) {
-        return alert('Sorry image not found...');
+    async function Search() {
+      try {
+        setIsLoading(true);
+        const pix = await FetchQuery(queryAfterSlash, page);
+
+        setImage(image => [...image, ...pix.hits]);
+        setIsLoading(false);
+        setTotalPage(Math.ceil(pix.totalHits / 12));
+        if (pix.hits.length === 0) {
+          return alert('Sorry image not found...');
+        }
+      } catch {
+        return alert('Something went wrong!');
       }
     }
-  }
 
-  handleLoadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
-  };
+    Search();
+  }, [page, query]);
 
-  render() {
-    return (
-      <>
-        <SearchBar onSubmit={this.changeQuery} />
+  return (
+    <>
+      <SearchBar onSubmit={changeQuery} />
 
-        {this.state.isloading ? (
-          <Loader />
-        ) : (
-          <ImageGallery image={this.state.image} />
-        )}
-        {this.state.image.length > 0 &&
-          this.state.totalPages !== this.state.page &&
-          !this.state.isloading && <Button onClick={this.handleLoadMore} />}
+      {isLoading ? <Loader /> : <ImageGallery image={image} />}
+      {image.length > 0 && totalPage !== page && !isLoading && (
+        <Button onClick={handleLoadMore} />
+      )}
 
-        <GlobalStyle />
-      </>
-    );
-  }
-}
+      <GlobalStyle />
+    </>
+  );
+};
