@@ -1,3 +1,4 @@
+import { toast } from 'react-hot-toast';
 import { But, Form, Header, Input } from './Searchbar.styled';
 
 export const SearchBar = ({ onSubmit }) => {
@@ -8,7 +9,7 @@ export const SearchBar = ({ onSubmit }) => {
           onSubmit={e => {
             e.preventDefault();
             if (e.target.elements.query.value.trim() === '') {
-              alert('Enter name');
+              toast('Enter name');
               return;
             }
             onSubmit(e.target.elements.query.value);

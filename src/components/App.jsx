@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Button } from './Button/button';
 import { FetchQuery } from 'API';
 import { Loader } from './Loader/Loader';
+import { Toaster, toast } from 'react-hot-toast';
 
 export const App = () => {
   const [query, setQuery] = useState('');
@@ -39,10 +40,10 @@ export const App = () => {
         setIsLoading(false);
         setTotalPage(Math.ceil(pix.totalHits / 12));
         if (pix.hits.length === 0) {
-          return alert('Sorry image not found...');
+          return toast.error('Sorry image not found...');
         }
       } catch {
-        return alert('Something went wrong!');
+        return toast.error('Something went wrong!');
       }
     }
 
@@ -59,6 +60,7 @@ export const App = () => {
       )}
 
       <GlobalStyle />
+      <Toaster position="top-center" reverseOrder={false} />
     </>
   );
 };
